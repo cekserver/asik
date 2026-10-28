@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOUBLE or ZERO</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  color: #eaffb0;
+  background-color: #e52d35;
+  background-image:
+    repeating-linear-gradient(45deg, #ffffff08 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(-45deg, #7e101012 0 2px, transparent 2px 8px);
+}
+
+.topbar {
+  height: 58px;
+  background: #369e54;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  color: white;
+}
+
+.back {
+  font-size: 32px;
+}
+
+.icons {
+  display: flex;
+  gap: 20px;
+  font-size: 25px;
+}
+
+main {
+  width: min(100%, 600px);
+  margin: auto;
+  padding: 24px 16px 30px;
+}
+
+h1 {
+  font-weight: normal;
+  font-size: clamp(23px, 5vw, 34px);
+  margin: 0 0 28px;
+}
+
+.outcome {
+  font-weight: 900;
+  font-size: clamp(36px, 8vw, 54px);
+  height: 66px;
+  margin-bottom: 16px;
+}
+
+.wheel-wrap {
+  width: min(92vw, 560px);
+  aspect-ratio: 1;
+  margin: 0 auto 28px;
+  position: relative;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 5px 3px #7b101066);
+}
+
+.pointer {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 3px);
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 17px solid transparent;
+  border-right: 17px solid transparent;
+  border-bottom: 31px solid white;
+  filter: drop-shadow(0 1px 1px #222);
+  z-index: 2;
+}
+
+.spin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(76px, 15vw, 100px);
+  height: clamp(76px, 15vw, 100px);
+  border: 6px solid white;
+  border-radius: 50%;
+  background: #111;
+  color: white;
+  font-size: clamp(19px, 4vw, 28px);
+  font-weight: bold;
+  box-shadow: 0 2px 5px #0007;
+  cursor: pointer;
+}
+
+.spin:disabled {
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.share {
+  background: #d7ffb1;
+  border: 0;
+  border-radius: 50px;
+  padding: 18px 28px;
+  color: #bf343b;
+  font-size: clamp(18px, 4vw, 27px);
+  box-shadow: 0 4px 0 #9cdb81;
+  cursor: pointer;
+}
+
+.hide {
+  border: 0;
+  background: transparent;
+  color: #eaffb0;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.note {
+  font-size: 13px;
+  color: #ffd8b8;
+  margin-top: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="topbar">
+  <span class="back">‹</span>
+  <div class="icons">
+    <span>◖))</span>
+    <span>▥</span>
+    <span>◕</span>
+    <span>⚙</span>
+  </div>
+</header>
+
+<main>
+  <h1>DOUBLE or ZERO</h1>
+
+  <div class="outcome" id="outcome">DOUBLE</div>
+
+  <div class="wheel-wrap">
+    <canvas
+      id="wheel"
+      width="800"
+      height="800"
+      aria-label="Spin Wheel Double dan Zero">
+    </canvas>
+
+    <div class="pointer"></div>
+
+    <button class="spin" id="spin">Spin</button>
+  </div>
+
+  <div class="actions">
+    <button class="share" id="share">
+      ● &nbsp; Share result
+    </button>
+
+    <button class="hide" id="toggle">
+      ◕ &nbsp; Hide slice
+    </button>
+  </div>
+
+  <div class="note" id="note">
+    Hasil spin selalu DOUBLE.
+  </div>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+
+  const spinBtn = document.getElementById('spin');
+  const outcome = document.getElementById('outcome');
+  const toggle = document.getElementById('toggle');
+  const share = document.getElementById('share');
+  const note = document.getElementById('note');
+
+  const N = 20;
+  const step = Math.PI * 2 / N;
+  const R = 378;
+  const C = 400;
+
+  let rotation = 0;
+  let spinning = false;
+  let hideSlice = false;
+
+  function draw() {
+    ctx.clearRect(0, 0, 800, 800);
+
+    for (let i = 0; i < N; i++) {
+      const start = rotation - Math.PI / 2 + i * step;
+      const end = start + step;
+      const green = i % 2 === 0;
+
+      ctx.beginPath();
+      ctx.moveTo(C, C);
+      ctx.arc(C, C, R, start, end);
+      ctx.closePath();
+
+      if (hideSlice && i === 1) {
+        ctx.fillStyle = '#9b9b9b';
+      } else {
+        ctx.fillStyle = green ? '#2da957' : '#e42d35';
+      }
+
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff65';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      if (!(hideSlice && i === 1)) {
+        const mid = start + step / 2;
+
+        ctx.save();
+
+        ctx.translate(
+          C + Math.cos(mid) * R * 0.70,
+          C + Math.sin(mid) * R * 0.70
+        );
+
+        ctx.rotate(mid + Math.PI / 2);
+        ctx.fillStyle = '#eaffb0';
+        ctx.font = 'bold 35px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillText(green ? 'DOUBLE' : 'ZERO', 0, 0);
+
+        ctx.restore();
+      }
+    }
+
+    ctx.beginPath();
+    ctx.arc(C, C, R, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff75';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+  }
+
+  function spin() {
+    if (spinning) return;
+
+    spinning = true;
+    spinBtn.disabled = true;
+
+    outcome.textContent = '...';
+    note.textContent = 'Roda sedang berputar';
+
+    const start = rotation;
+    const duration = 3400;
+    const startTime = performance.now();
+
+    const targetBase = Math.PI * 2 * 7;
+    const desiredMod = step / 2;
+
+    const currentMod =
+      ((rotation % step) + step) % step;
+
+    const correction =
+      ((desiredMod - currentMod) % step + step) % step;
+
+    const total = targetBase + correction;
+
+    function frame(now) {
+      const p = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - p, 4);
+
+      rotation = start + total * eased;
+      draw();
+
+      if (p < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        rotation = start + total;
+
+        const mod = ((rotation % step) + step) % step;
+
+        rotation +=
+          ((desiredMod - mod) % step + step) % step;
+
+        draw();
+
+        outcome.textContent = 'DOUBLE';
+        note.textContent = '🎉 DOUBLE menang!';
+
+        spinning = false;
+        spinBtn.disabled = false;
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  spinBtn.addEventListener('click', spin);
+
+  toggle.addEventListener('click', () => {
+    hideSlice = !hideSlice;
+
+    toggle.innerHTML = hideSlice
+      ? '◕ &nbsp; Show slice'
+      : '◕ &nbsp; Hide slice';
+
+    draw();
+  });
+
+  share.addEventListener('click', async () => {
+    const text = 'Hasil Spin Wheel: DOUBLE!';
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'DOUBLE or ZERO',
+          text: text
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        note.textContent =
+          'Hasil DOUBLE disalin untuk dibagikan.';
+      } else {
+        note.textContent = text;
+      }
+    } catch (e) {
+      // Pengguna membatalkan menu berbagi.
+    }
+  });
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
